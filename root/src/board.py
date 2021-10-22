@@ -110,18 +110,23 @@ class Board:
         return move
 
     def output(self) -> list:
+        """Convert the bitboards into a more understandable representation of the board
+
+        Returns:
+            list: Board representation
+        """
         board_arr = []
         for i in range(64):
-            bit = LSB1 << i
-            if (self._bitboards[0] & bit) != 0:
+            bit = LSB1 << i ##Shift to examine each bit individually
+            if (self._bitboards[0] & bit) != 0: ##Played by first player
                 board_arr.append('X')
-            elif (self._bitboards[1] & bit) != 0:
+            elif (self._bitboards[1] & bit) != 0: ##Played by second player
                 board_arr.append('O')
-            else:
+            else: ##Played by no player
                 board_arr.append('-')
 
         output_arr = []
-        for r in range(5, -1, -1):
+        for r in range(5, -1, -1): ##Organise values into structured array
             row = []
             for c in range(7):
                 row.append(board_arr[r + (c*7)])
