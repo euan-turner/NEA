@@ -1,5 +1,4 @@
 import sqlite3
-from typing_extensions import ParamSpecArgs
 from auxiliary import Save_Type
 from board import Board
 
@@ -34,7 +33,7 @@ def load(file_type : Save_Type, database : str):
     SELECT data FROM store WHERE filetype = {file_type}
     """
     result = execute_sql(sql_command, database)
-    return [file for file in result]
+    return [file[0] for file in result]
 
 def convert(moves: list) -> str:
     """Converts the board's representation of the the move history into a string
@@ -52,7 +51,7 @@ def execute_sql(command, database):
 
     Args:
         command (string): sqlite3 command
-        database (string): Database to use
+        database (string): atabase to use
 
     Returns:
         sqlite3.Cursor : Results of sql command
@@ -61,6 +60,5 @@ def execute_sql(command, database):
     cursor = conn.cursor()
     output = cursor.execute(command)
     conn.commit()
-    conn.close()
     return output
 
