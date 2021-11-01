@@ -1,7 +1,8 @@
 # Byte-compiled
 __pycache__/
 
-
+## The database
+*.db
 # Unit tests
 .pytest_cache/
 
