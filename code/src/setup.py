@@ -13,6 +13,7 @@ data TEXT,
 primary key (fileID)
 )
 """
+##sqlite3 will autoincrement integer primary keys
 
 cursor.execute(create_store)
 connection.commit()

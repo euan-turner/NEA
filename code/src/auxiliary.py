@@ -11,3 +11,7 @@ class Status:
     game_won = 1
     game_drawn = 0
     game_unfinished = -1
+
+class Save_Type:
+    position = 1
+    game = 0
