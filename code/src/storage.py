@@ -1,7 +1,7 @@
 import sqlite3
 from auxiliary import Save_Type
 from board import Board
-from main import Main
+from interface import Interface
 from auxiliary import get_confirmation
 from prettytable import PrettyTable
 
@@ -87,7 +87,6 @@ def select_file(files : list):
         [type]: [description]
     """
     table = PrettyTable()
-    table.field_names = ["#", "File"]
     table.add_column("#", [i+1 for i in range(len(files))])
     table.add_column("File", files)
     print(table)
@@ -125,10 +124,10 @@ def traverse_game(move_history : list) -> list:
     Returns:
         list: Move history up to the position selected
     """
-    traverse_board = Main() ##Need main instance for output function
+    traverse_board = Board() ##Need main instance for output function
     selected = False
     while not selected:
-        current_counter = traverse_board.board.get_counter()
+        current_counter = traverse_board.get_counter()
         if current_counter == 0: ##On initial position
             message = "Options: N - next" ##Cannot select or go back
             allowed = {'N'}
@@ -141,7 +140,7 @@ def traverse_game(move_history : list) -> list:
 
 
 
-        traverse_board.output()
+        Interface.output_board(traverse_board)
         valid = False
         while not valid:
             try:
@@ -155,13 +154,13 @@ def traverse_game(move_history : list) -> list:
             else:
                 valid = True
                 if choice == "N":
-                    traverse_board.board.make_move(move_history[current_counter])
+                    traverse_board.make_move(move_history[current_counter])
                 elif choice == "B":
-                    traverse_board.board.undo_move()
+                    traverse_board.undo_move()
                 elif choice == "S":
                     confirmed = get_confirmation()
                     if confirmed:
-                        return traverse_board.board.get_move_history()
+                        return traverse_board.get_move_history()
                     else:
                         print("Returning to game navigation\n")
 
