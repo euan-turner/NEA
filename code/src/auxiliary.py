@@ -15,3 +15,21 @@ class Status:
 class Save_Type:
     position = 1
     game = 0
+
+def get_confirmation():
+    """Generic method to accept confirmation of an input
+
+    Returns:
+        boolean: Confirmed - True, Not confirmed - False
+    """
+    while True:
+        try:
+            conf = input("Confirm input (Y/N): ").upper()
+            if conf not in {'Y', 'N'}:
+                print("Invalid input")
+            elif conf == 'Y':
+                return True
+            else:
+                return False
+        except:
+            print("Invalid input")

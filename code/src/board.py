@@ -45,7 +45,7 @@ class Board:
         self._counter += 1 ##Increment counter
 
     def undo_move(self):
-        """Removes the last move played - primarily used in the minimax search
+        """Removes the last move played
         """
         self._counter -= 1 ##Decrement counter to point to last move
         column = self._move_history[self._counter]
