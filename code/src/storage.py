@@ -76,7 +76,7 @@ def execute_sql(command : str, database : str) -> sqlite3.Cursor:
     conn.commit()
     return output
 
-def select_file(files : list):
+def select_file(files : list) -> list:
     """Allows the user to select a file from the database to
     load into the application
 
@@ -84,7 +84,7 @@ def select_file(files : list):
         files (list): All files of type in the database
         extra argument to specify user will be added with account system
     Returns:
-        [type]: [description]
+        list: Move history representing selected file
     """
     table = PrettyTable()
     table.add_column("#", [i+1 for i in range(len(files))])
