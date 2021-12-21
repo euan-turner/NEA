@@ -1,7 +1,8 @@
 from board import Board
-from auxiliary import Status, Save_Type, get_confirmation, Main_Menu_Choice, Load_Menu_Choice
+from auxiliary import Status, Save_Type, get_confirmation, Main_Menu_Choice, Load_Menu_Choice, Player_Type
 from storage import save, load, select_file, traverse_game
 from interface import Interface
+from ai import Minimax
 
 class Main:
 
@@ -35,7 +36,12 @@ class Main:
                 except:
                     print("Invalid input")
 
-        column = self.input() ##Accept move input from next player
+        if self.players[self.board.get_counter()%2] == Player_Type.human:
+            column = self.input() ##Accept move input from human player
+        elif self.players[self.board.get_counter()%2] == Player_Type.ai:
+            ##Currently working at a fixed depth of 6
+            ai = Minimax(self.board.get_move_history(), 6)
+            column = ai.search()
 
         self.board.make_move(column) ##Play move in the board
 
@@ -64,14 +70,14 @@ class Main:
                 except:
                     print("Invalid input")
 
-            self.board.reset() ##Restart game
+            self.reset() ##Restart game
             self.main()
 
         elif current_state == Status.game_drawn: ##Last move drew the game
             print("Game drawn")
             Interface.output_board(self.board)
             print("\n\n")
-            self.board.reset() ##Restart game
+            self.reset() ##Restart game
             self.main()
 
     def input(self) -> int:
@@ -94,13 +100,26 @@ class Main:
             valid_move = True
         return choice
 
+    def reset(self):
+        """Reset method for main
+        """
+        self.board.reset()
+        self.players = None
+
     def main(self):
         """Main function controlling the usage of components of the application
         """
         print("\n\nConnect 4 Application\n\n")
         choice = self.main_menu()
         if choice == Main_Menu_Choice.play:
+            ##Both player 1 and player 2 are human
+            self.players = [Player_Type.human,Player_Type.human]
             self.play()
+
+        elif choice == Main_Menu_Choice.ai:
+            self.ai_menu()
+            self.play()
+
 
         elif choice == Main_Menu_Choice.load:
             filetype = self.load_menu()
@@ -132,6 +151,7 @@ class Main:
         ##Load position into board
         for move in position:
             self.board.make_move(move)
+        self.ai_menu()
         self.play()
 
     def main_menu(self) -> int:
@@ -142,10 +162,12 @@ class Main:
         """
         valid = False
         while not valid:
-            choice = input("1 - Play a game\n2 - Load a file\n:")
+            choice = input("1 - Play a game\n2 - Play the AI\n3 - Load a file\n:")
             if choice == '1':
                 return Main_Menu_Choice.play
             elif choice == '2':
+                return Main_Menu_Choice.ai
+            elif choice == '3':
                 return Main_Menu_Choice.load
             else:
                 print("Invalid entry, try again")
@@ -166,6 +188,19 @@ class Main:
             else:
                 print("Invalid entry, try again")
 
+    def ai_menu(self) :
+        """Runs the ai menu, assigning player one and player two
+        """
+        while True:
+            choice = input("Who plays first?\n1 - You\n2 - AI\n:")
+            if choice == '1':
+                self.players = [Player_Type.human,Player_Type.ai]
+                break
+            elif choice == '2':
+                self.players = [Player_Type.ai,Player_Type.human]
+                break
+            else:
+                print("Invalid entry, try again")
 
 
 

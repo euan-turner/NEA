@@ -29,6 +29,17 @@ class Board:
         """
         return self._move_history
 
+    def get_bitboard(self, index : int) -> Bitboard:
+        """Get method for a bitboard
+
+        Args:
+            index (int): The bitboard to return
+
+        Returns:
+            Bitboard: The desired bitboard
+        """
+        return self._bitboards[index]
+
     def make_move(self, column : int):
         """Plays a move in the next player's bitboard
 

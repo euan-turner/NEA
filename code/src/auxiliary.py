@@ -19,10 +19,14 @@ class Save_Type:
 class Main_Menu_Choice:
     play = 1
     load = 2
+    ai = 3
 
 class Load_Menu_Choice:
     position = 1
     game = 2
+class Player_Type:
+    ai = 1
+    human = 2
 
 def get_confirmation():
     """Generic method to accept confirmation of an input
