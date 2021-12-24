@@ -17,9 +17,12 @@ class Save_Type:
     game = 0
 
 class Main_Menu_Choice:
+    menu = 0
     play = 1
-    load = 2
-    ai = 3
+    ai = 2
+    position = 3
+    game = 4
+    out = 5
 
 class Load_Menu_Choice:
     position = 1
