@@ -104,10 +104,14 @@ class Interface:
         self.window.fill(self.base_theme)
         pygame.display.flip()
 
-    def home_menu_window(self):
-        self.home_menu_window_setup()
+    def home_menu_window(self) -> int:
+        """Runs the home menu window and gets the user's chocie
 
-        delay = 0
+        Returns:
+            int: Code representing application component choice
+        """        
+
+        self.home_menu_window_setup()
 
         ##Main loop for home window
         while True:
