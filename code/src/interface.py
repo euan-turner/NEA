@@ -201,7 +201,6 @@ class Interface:
 
     def game_window(self, board : Board):
         self.create_window()
-        self.menu_button_setup()
         game_surface = self.game_window_setup()
         self.add_turn_buttons(board)
 
@@ -216,7 +215,6 @@ class Interface:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     for button in self.active_buttons:
                         choice = button.check_click(event, self.window, self.base_theme)
-                        print(choice)
                         ##Menu clicked - run menu options
                         if choice == 'menu':
                             ##Clear menu button
@@ -227,22 +225,33 @@ class Interface:
                         ##Turn played
                         elif choice in range(7):
                             self.play_move(choice, board, game_surface)
+                            button.clicked = False
+                            """Need to pull across rest of turn functionality from main"""
+                            """Need to check for full column and update turn buttons"""
                         ##Menu option selected
                         elif choice != None:
                             return choice
 
     def game_window_setup(self) -> pygame.Surface:
-        ##And separate method to create buttons for valid moves
-        ##Need to clear them for ai move
+        """Sets up most of the initial game window
+
+        Returns:
+            pygame.Surface: The board surface moves will be played in
+        """
+        self.menu_button_setup()
         game_surface = self.game_surface_setup()
         self.window.blit(game_surface, (125,50))
         ##Add save button here
         ##Add user icon here
-        ##Add turn buttons
 
         return game_surface
 
     def game_surface_setup(self) -> pygame.Surface:
+        """Sets up the initial board view in a separate surface
+
+        Returns:
+            pygame.Surface: Separate game surface
+        """
         game_surface = pygame.Surface((350,300))
         game_surface.fill(self.base_theme)
         ##Draw board
@@ -294,14 +303,21 @@ class Interface:
             col (int): Column to play in
             board (Board): Current board instance
         """
+        ##Get token
+        token = self.get_token(board)
         ##Play move in board
         board.make_move(col)
 
         ##Identify location from col and heights
         height = board.get_height(col) % 7
         ##Work out (top, left) of token to be played
+        x = col*50
+        y = 300 - 50*height
 
         ##Blit token to game surface
+        game_surface.blit(token, (x,y))
+        ##Blit game surface to window
+        self.window.blit(game_surface, (125,50))
 
 
     def get_token(self, board : Board) -> pygame.Surface:
@@ -319,10 +335,13 @@ class Interface:
         else:
             colour = YELLOW
         ##Create surface
-        token = pygame.Surface((30,30))
-        token.fill(self.base_theme)
+        token = pygame.Surface((50,50))
+        ##Make background transparent
+        token.fill(BLACK)
+        token.set_colorkey(BLACK)
+
         ##Colour circle depending on player
-        pygame.draw.circle(token, colour, (15, 15), 10, width = 0)
+        pygame.draw.circle(token, colour, (25, 25), 18, width = 0)
         return token
 
 
