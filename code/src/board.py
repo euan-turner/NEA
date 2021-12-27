@@ -40,6 +40,18 @@ class Board:
         """
         return self._bitboards[index]
 
+    def get_height(self, index : int) -> int:
+        """Get method for height in a column
+
+        Args:
+            index (int): Column
+
+        Returns:
+            int: Height of next empty cell (starting from 0,7,14 etc.)
+        """
+        return self._heights[index]
+
+
     def make_move(self, column : int):
         """Plays a move in the next player's bitboard
 
