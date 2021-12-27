@@ -203,6 +203,7 @@ class Interface:
         self.create_window()
         self.menu_button_setup()
         game_surface = self.game_window_setup()
+        self.add_turn_buttons(board)
 
         ##Main loop for game window
         cont = True
@@ -225,13 +226,12 @@ class Interface:
                             break
                         ##Turn played
                         elif choice in range(7):
-                            self.play_move(choice, board)
+                            self.play_move(choice, board, game_surface)
                         ##Menu option selected
                         elif choice != None:
                             return choice
 
     def game_window_setup(self) -> pygame.Surface:
-        ##Need to change to individual board surface
         ##And separate method to create buttons for valid moves
         ##Need to clear them for ai move
         game_surface = self.game_surface_setup()
@@ -239,20 +239,7 @@ class Interface:
         ##Add save button here
         ##Add user icon here
         ##Add turn buttons
-        for col in range(7):
-            label = str(col+1)
-            ##Surfaces
-            font = pygame.font.SysFont('rockwell', 20)
-            default_surface = font.render(label, False, BLACK)
-            hovered_surface = font.render(label, False, DEEP_RED)
-            ##Position
-            x = (150 + col*50) - (default_surface.get_width() / 2)
-            y = 360
-            rect = pygame.Rect(x,y, default_surface.get_width(), default_surface.get_height())
-            ##Create button
-            button = Button(rect, default_surface, hovered_surface, default_surface, col)
-            button.update(self.window, self.base_theme)
-            self.active_buttons.append(button)
+
         return game_surface
 
     def game_surface_setup(self) -> pygame.Surface:
@@ -268,7 +255,38 @@ class Interface:
 
         return game_surface
 
-    def play_move(self, col : int, board : Board):
+    def add_turn_buttons(self, board : Board):
+        """Add valid turn buttons to window
+
+        Args:
+            board (Board): Current board instance
+        """
+        valid_moves = board.retrieve_valid_moves()
+
+        for col in valid_moves:
+            label = str(col+1)
+            ##Surfaces
+            font = pygame.font.SysFont('rockwell', 20)
+            default_surface = font.render(label, False, BLACK)
+            hovered_surface = font.render(label, False, DEEP_RED)
+            ##Position
+            x = (150 + col*50) - (default_surface.get_width() / 2)
+            y = 360
+            rect = pygame.Rect(x,y, default_surface.get_width(), default_surface.get_height())
+            ##Create button
+            button = Button(rect, default_surface, hovered_surface, default_surface, col)
+            button.update(self.window, self.base_theme)
+            self.active_buttons.append(button)
+
+    def clear_turn_buttons(self):
+        """Clear all turn buttons from the window
+        For use on ai turn, or when a column has been filled
+        """
+        for button in self.active_buttons:
+            if button.code in range(7):
+                button.clear(self.window, self.base_theme)
+
+    def play_move(self, col : int, board : Board, game_surface : pygame.Surface):
         """Plays a move in the board and then game surface
         Game window will need to be updated afterwards
 
@@ -277,6 +295,7 @@ class Interface:
             board (Board): Current board instance
         """
         ##Play move in board
+        board.make_move(col)
 
         ##Identify location from col and heights
         height = board.get_height(col) % 7
