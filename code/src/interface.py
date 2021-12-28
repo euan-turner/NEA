@@ -1,6 +1,7 @@
 from prettytable import PrettyTable
 from board import Board
 from button import Button
+from auxiliary import Player_Type
 import pygame
 import os
 
@@ -19,6 +20,7 @@ class Interface:
     def __init__(self, base_theme):
         self.base_theme = base_theme
         self.active_buttons = []
+        self.players = [Player_Type.human, Player_Type.human]
 
     def create_window(self):
         """Creates the main window used by the application
@@ -126,9 +128,18 @@ class Interface:
             self.active_buttons.append(button)
 
     def game_window(self, board : Board):
+        """Runs the game window, allowing a user to play a game against a human or ai
+
+        Args:
+            board (Board): Current board instance
+
+        Returns:
+            [type]: [description]
+        """
         self.create_window()
         game_surface = self.game_window_setup()
-        self.add_turn_buttons(board)
+        ##Initial button setup
+        self.turn_setup(board)
 
         ##Main loop for game window
         cont = True
@@ -151,9 +162,10 @@ class Interface:
                         ##Turn played
                         elif choice in range(7):
                             self.play_move(choice, board, game_surface)
-                            button.clicked = False
                             """Need to pull across rest of turn functionality from main"""
-                            """Need to check for full column and update turn buttons"""
+                            ##Set up for next turn
+                            self.turn_setup(board)
+                            break
                         ##Menu option selected
                         elif choice != None:
                             return choice
@@ -190,6 +202,13 @@ class Interface:
 
         return game_surface
 
+    def turn_setup(self, board : Board):
+        self.clear_turn_buttons()
+        ##Player is human so add buttons
+        if self.players[board.get_counter() % 2] == Player_Type.human:
+            self.add_turn_buttons(board)
+
+
     def add_turn_buttons(self, board : Board):
         """Add valid turn buttons to window
 
@@ -220,6 +239,7 @@ class Interface:
         for button in self.active_buttons:
             if button.code in range(7):
                 button.clear(self.window, self.base_theme)
+        self.active_buttons = [b for b in self.active_buttons if b.code not in range(7)]
 
     def play_move(self, col : int, board : Board, game_surface : pygame.Surface):
         """Plays a move in the board and then game surface
@@ -290,16 +310,6 @@ class Interface:
         file_path = os.path.dirname(os.path.abspath(__file__))
         image_path = os.path.join(file_path, '..', '..', 'images', filename)
         return os.path.normpath(image_path)
-
-    def output_board(board : Board):
-
-        board_output = board.output()
-        table = PrettyTable()
-        table.header = False
-        table.hrules = True
-        for row in board_output:
-            table.add_row(row)
-        print(table)
 
 
 
