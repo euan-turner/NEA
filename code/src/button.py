@@ -5,7 +5,7 @@ class Button():
     """
 
     def __init__(self, rect : pygame.Rect, default : pygame.Surface,
-            hovered : pygame.Surface, clicked : pygame.Surface, code : int):
+            hovered : pygame.Surface, code : int):
         """Constructor method for a button
         Requires default, hovered, and clicked surface to be preconstructed
 
@@ -13,13 +13,11 @@ class Button():
             rect (pygame.Rect): Position and dimensions of button on surface
             default (pygame.Surface): Image surface of button as default
             hovered (pygame.Surface): Image surface of button when hovered
-            clicked (pygame.Surface): Image surface of button when clicked
             code (int): Code to identify button
         """
         self.rect = rect
         self.default = default
         self.hovered_surface = hovered
-        self.clicked_surface = clicked
         self.hovered = False
         self.clicked = False
         self.code = code
@@ -38,7 +36,6 @@ class Button():
         """
         if self.rect.collidepoint(event.pos) and not self.clicked:
             self.clicked = True
-            self.update(window, background)
             return self.code
         else:
             return None
@@ -60,10 +57,7 @@ class Button():
             background (tuple): Background colour to wipe with before blit
         """
         self.check_hover()
-        if self.clicked:
-            self.clear(window, background)
-            window.blit(self.clicked_surface, self.rect)
-        elif self.hovered:
+        if self.hovered:
             self.clear(window, background)
             window.blit(self.hovered_surface, self.rect)
         else:
