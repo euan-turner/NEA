@@ -1,4 +1,5 @@
 from typing import NewType
+from threading import Thread
 import numpy as np
 
 ##Custome type definitions
@@ -48,3 +49,23 @@ def get_confirmation():
                 return False
         except:
             print("Invalid input")
+
+class ReturnThread(Thread):
+    """Thread subclass to return the value from the target function
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.result = None
+
+    def run(self):
+        """Store result of target function
+        """
+        if self._target:
+            self.result = self._target(*self._args, **self._kwargs)
+
+    def join(self, *args, **kwargs):
+        """Return result of target function
+        """
+        super().join(*args, **kwargs)
+        return self.result

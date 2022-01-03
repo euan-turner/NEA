@@ -1,7 +1,7 @@
 import sqlite3
 from auxiliary import Save_Type
 from board import Board
-from interface import Interface
+##from interface import Interface
 from auxiliary import get_confirmation
 from prettytable import PrettyTable
 
@@ -117,7 +117,7 @@ def select_file(files : list) -> list:
 
 def traverse_game(move_history : list) -> list:
     """Allows the user to select a position from a game to use
-
+        Need to update for gui
     Args:
         move_history (list): Entire move history of a game
 
@@ -138,9 +138,7 @@ def traverse_game(move_history : list) -> list:
             message = "Options: B - back, N - next, S - select"
             allowed = {"B", "N", "S"}
 
-
-
-        Interface.output_board(traverse_board)
+        ##Interface.output_board(traverse_board)
         valid = False
         while not valid:
             try:

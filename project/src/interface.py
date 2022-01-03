@@ -1,7 +1,8 @@
-from prettytable import PrettyTable
 from board import Board
 from button import Button
-from auxiliary import Player_Type
+from auxiliary import Player_Type, Status, Save_Type, ReturnThread
+from storage import save
+from ai import Minimax
 import pygame
 import os
 
@@ -41,9 +42,7 @@ class Interface:
 
         ##Main loop for home window
         while True:
-            ##Update all active buttons
-            for button in self.active_buttons:
-                button.update(self.window, self.base_theme)
+            self.update_active_buttons()
             ##Check for mouse clicks
             for event in pygame.event.get():
                 if event.type == pygame.MOUSEBUTTONDOWN:
@@ -100,7 +99,7 @@ class Interface:
         hovered_menu_surface = pygame.transform.scale(menu_surface, (55, 55))
         ##Clicked menu surface can just be default, as it will only be visible for an instant
         menu_button = Button(pygame.Rect(5, 5, 60, 60), default_menu_surface,
-            hovered_menu_surface, default_menu_surface, 'menu')
+            hovered_menu_surface, 'menu')
         menu_button.update(self.window, self.base_theme)
         self.active_buttons.append(menu_button)
 
@@ -123,52 +122,160 @@ class Interface:
             y = 5 + i*default_surface.get_height()
             rect = pygame.Rect(x, y, default_surface.get_width(), default_surface.get_height())
             ##Create button
-            button = Button(rect, default_surface, hovered_surface, default_surface, code)
+            button = Button(rect, default_surface, hovered_surface, code)
             button.update(self.window, self.base_theme)
             self.active_buttons.append(button)
 
     def game_window(self, board : Board):
         """Runs the game window, allowing a user to play a game against a human or ai
-
+        Needs players to be set before running
         Args:
             board (Board): Current board instance
 
         Returns:
-            [type]: [description]
+            str: Code for next part of the application to use
         """
         self.create_window()
         game_surface = self.game_window_setup()
         ##Initial button setup
         self.turn_setup(board)
 
+        """Establish method as main thread"""
+        """Run ai as separate thread if needed"""
+        """Set players"""
+
         ##Main loop for game window
-        cont = True
-        while cont:
-            ##Update all active buttons
-            for button in self.active_buttons:
-                button.update(self.window, self.base_theme)
+        return_code = None
+        ##While turns are continuing
+        while return_code == None:
+            ##Human turn
+            if self.players[board.get_counter() % 2] == Player_Type.human:
+                ##No multithreading required
+                return_code = self.game_loop(board, game_surface)
+
+
+        return return_code
+
+    def game_loop(self, board : Board, game_surface : pygame.Surface):
+        """Runs the game while checking all button clicks
+        Codes being returned:
+        home - Return to home window
+        menu options - Run selected component
+        None - Run game loop for next turn
+
+        Args:
+            board (Board): Current board instance
+            game_surface (pygame.Surface): Individual game surface
+
+        Returns:
+            str: Code for next part of application to use
+        """
+        while True:
+            self.update_active_buttons()
             ##Check for mouse clicks
             for event in pygame.event.get():
                 if event.type == pygame.MOUSEBUTTONDOWN:
+                    ##Check if a button was clicked
                     for button in self.active_buttons:
-                        choice = button.check_click(event, self.window, self.base_theme)
+                        code = button.check_click(event, self.window, self.base_theme)
                         ##Menu clicked - run menu options
-                        if choice == 'menu':
-                            ##Clear menu button
+                        if code == 'menu':
+                            ##Make necessary window updates
                             button.clear(self.window, self.base_theme)
                             self.active_buttons.remove(button)
                             self.menu_options()
-                            break
+                            break ##Clear current event queue
                         ##Turn played
-                        elif choice in range(7):
-                            self.play_move(choice, board, game_surface)
-                            """Need to pull across rest of turn functionality from main"""
-                            ##Set up for next turn
-                            self.turn_setup(board)
-                            break
+                        elif code in range(7):
+                            self.play_move(code, board, game_surface)
+                            state = board.game_over()
+                            if state == Status.game_won:
+                                ##Output game won
+                                ##Give option to save game
+                                self.end_game_output(game_surface, 'Game Won', board)
+                                return 'home'
+                            elif state == Status.game_drawn:
+                                ##Output game drawn
+                                ##Give option to save game
+                                self.end_game_output(game_surface, 'Game Drawn', board)
+                                return 'home'
+                            else:
+                                self.turn_setup(board)
+                            return None ##Terminate this game loop
                         ##Menu option selected
-                        elif choice != None:
-                            return choice
+                        elif code != None:
+                            return code
+
+    def end_game_output(self, game_surface : pygame.Surface, message : str, board : Board):
+        """Runs when a game finishes
+        Saves the game if desired
+
+        Args:
+            game_surface (pygame.Surface): Separate game surface
+            message (str): Game drawn or won
+            board (Board): Current board instance (to save)
+        """
+        ##Remove board display
+        game_surface.fill(self.base_theme)
+        self.window.blit(game_surface, (125,50))
+
+        ##Remove turn buttons
+        self.clear_turn_buttons()
+
+        ##Remove menu buttons - no longer needed
+        ##User will be returned to home window
+        for button in self.active_buttons:
+            button.clear(self.window, self.base_theme)
+        self.active_buttons = []
+
+
+        ##Add text surfaces
+        message_font = pygame.font.SysFont('rockwell', 50)
+        message_surface = message_font.render(message, False, BLACK)
+        message_x = (self.window.get_width() / 2) - message_surface.get_width() / 2
+        message_y = self.window.get_height() / 4
+        self.window.blit(message_surface, (message_x, message_y))
+
+        save_font = pygame.font.SysFont('rockwell', 40)
+        save_surface = save_font.render('Save Game?', False, BLACK)
+        save_x = (self.window.get_width() / 2) - save_surface.get_width() / 2
+        save_y = message_y + message_surface.get_height() + 10
+        self.window.blit(save_surface, (save_x, save_y))
+
+        ##Add Yes/No buttons
+        font = pygame.font.SysFont('rockwell', 30)
+        yes_surface = font.render('Yes', False, BLACK)
+        yes_hovered_surface = font.render('Yes', False, DEEP_RED)
+        yes_x = save_x
+        yes_y = save_y + yes_surface.get_height() + 10
+        yes_rect = pygame.Rect(yes_x, yes_y, yes_surface.get_width(), yes_surface.get_height())
+        yes_button = Button(yes_rect, yes_surface, yes_hovered_surface, 'yes')
+        yes_button.update(self.window, self.base_theme)
+        self.active_buttons.append(yes_button)
+
+        no_surface = font.render('No', False, BLACK)
+        no_hovered_surface = font.render('No', False, DEEP_RED)
+        no_x = save_x + save_surface.get_width() - no_surface.get_width()
+        no_y = yes_y
+        no_rect = pygame.Rect(no_x, no_y, no_surface.get_width(), no_surface.get_height())
+        no_button = Button(no_rect, no_surface, no_hovered_surface, 'no')
+        no_button.update(self.window, self.base_theme)
+        self.active_buttons.append(no_button)
+
+        ##Check for event
+        while True:
+            self.update_active_buttons()
+            for event in pygame.event.get():
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    ##Check if a button was clicked
+                    for button in self.active_buttons:
+                        code = button.check_click(event, self.window, self.base_theme)
+                        ##Yes - save game
+                        if code == 'yes':
+                            save(Save_Type.game, board, 'Connect4.db')
+                            return
+                        elif code == 'no':
+                            return
 
     def game_window_setup(self) -> pygame.Surface:
         """Sets up most of the initial game window
@@ -203,6 +310,11 @@ class Interface:
         return game_surface
 
     def turn_setup(self, board : Board):
+        """Set up the buttons for the next turn
+
+        Args:
+            board (Board): Current board instance
+        """
         self.clear_turn_buttons()
         ##Player is human so add buttons
         if self.players[board.get_counter() % 2] == Player_Type.human:
@@ -228,13 +340,12 @@ class Interface:
             y = 360
             rect = pygame.Rect(x,y, default_surface.get_width(), default_surface.get_height())
             ##Create button
-            button = Button(rect, default_surface, hovered_surface, default_surface, col)
+            button = Button(rect, default_surface, hovered_surface, col)
             button.update(self.window, self.base_theme)
             self.active_buttons.append(button)
 
     def clear_turn_buttons(self):
         """Clear all turn buttons from the window
-        For use on ai turn, or when a column has been filled
         """
         for button in self.active_buttons:
             if button.code in range(7):
@@ -244,6 +355,7 @@ class Interface:
     def play_move(self, col : int, board : Board, game_surface : pygame.Surface):
         """Plays a move in the board and then game surface
         Game window will need to be updated afterwards
+        Used in isolation to create images during loading of a file
 
         Args:
             col (int): Column to play in
@@ -290,10 +402,6 @@ class Interface:
         pygame.draw.circle(token, colour, (25, 25), 18, width = 0)
         return token
 
-
-
-
-
     def get_image_path(self, filename : str) -> str:
         """Gets the path of an image in the images directory
         Assumes the following directory structure
@@ -310,6 +418,15 @@ class Interface:
         file_path = os.path.dirname(os.path.abspath(__file__))
         image_path = os.path.join(file_path, '..', '..', 'images', filename)
         return os.path.normpath(image_path)
+
+    def update_active_buttons(self):
+        """Update all active buttons in the window
+        """
+        for button in self.active_buttons:
+            button.update(self.window, self.base_theme)
+
+    def set_players(self, player_one : Player_Type, player_two : Player_Type):
+        self.players = [player_one, player_two]
 
 
 

@@ -11,3 +11,6 @@ images/
 
 # VS Code stuff
 .vscode/
+
+##Tests
+tests.py
