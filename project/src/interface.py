@@ -5,6 +5,7 @@ from storage import save
 from ai import Minimax
 import pygame
 import os
+from time import sleep
 
 
 pygame.init()
@@ -21,7 +22,7 @@ class Interface:
     def __init__(self, base_theme):
         self.base_theme = base_theme
         self.active_buttons = []
-        self.players = [Player_Type.human, Player_Type.human]
+        self.players = [Player_Type.human, Player_Type.ai]
 
     def create_window(self):
         """Creates the main window used by the application
@@ -150,8 +151,13 @@ class Interface:
         while return_code == None:
             ##Human turn
             if self.players[board.get_counter() % 2] == Player_Type.human:
-                ##No multithreading required
                 return_code = self.game_loop(board, game_surface)
+            ##AI turn
+            else:
+                ai = Minimax(board.get_move_history(), 6)
+                move = ai.search()
+                self.play_move(move, board, game_surface)
+                return_code = self.terminal_check(board, game_surface)
 
 
         return return_code
@@ -189,19 +195,7 @@ class Interface:
                         elif code in range(7):
                             self.play_move(code, board, game_surface)
                             state = board.game_over()
-                            if state == Status.game_won:
-                                ##Output game won
-                                ##Give option to save game
-                                self.end_game_output(game_surface, 'Game Won', board)
-                                return 'home'
-                            elif state == Status.game_drawn:
-                                ##Output game drawn
-                                ##Give option to save game
-                                self.end_game_output(game_surface, 'Game Drawn', board)
-                                return 'home'
-                            else:
-                                self.turn_setup(board)
-                            return None ##Terminate this game loop
+                            return self.terminal_check(board, game_surface)
                         ##Menu option selected
                         elif code != None:
                             return code
@@ -215,6 +209,8 @@ class Interface:
             message (str): Game drawn or won
             board (Board): Current board instance (to save)
         """
+        pygame.display.flip()
+        sleep(2)
         ##Remove board display
         game_surface.fill(self.base_theme)
         self.window.blit(game_surface, (125,50))
@@ -319,6 +315,7 @@ class Interface:
         ##Player is human so add buttons
         if self.players[board.get_counter() % 2] == Player_Type.human:
             self.add_turn_buttons(board)
+        pygame.display.flip()
 
 
     def add_turn_buttons(self, board : Board):
@@ -352,7 +349,7 @@ class Interface:
                 button.clear(self.window, self.base_theme)
         self.active_buttons = [b for b in self.active_buttons if b.code not in range(7)]
 
-    def play_move(self, col : int, board : Board, game_surface : pygame.Surface):
+    def play_move(self, col : int, board : Board, game_surface : pygame.Surface, in_game : bool = True):
         """Plays a move in the board and then game surface
         Game window will need to be updated afterwards
         Used in isolation to create images during loading of a file
@@ -360,6 +357,7 @@ class Interface:
         Args:
             col (int): Column to play in
             board (Board): Current board instance
+            in_game (bool): Defaults to true, game surface should be blitted to main window
         """
         ##Get token
         token = self.get_token(board)
@@ -374,8 +372,23 @@ class Interface:
 
         ##Blit token to game surface
         game_surface.blit(token, (x,y))
-        ##Blit game surface to window
-        self.window.blit(game_surface, (125,50))
+        if in_game:
+            ##Blit game surface to window
+            self.window.blit(game_surface, (125,50))
+            pygame.display.flip()
+
+    def terminal_check(self, board : Board, game_surface : pygame.Surface):
+        state = board.game_over()
+        if state == Status.game_won:
+            self.end_game_output(game_surface, 'Game Won', board)
+            return 'home'
+        elif state == Status.game_drawn:
+            self.end_game_outut(game_surface, 'Game Drawn', board)
+            return 'home'
+        else:
+            ##Terminate game loop
+            self.turn_setup(board)
+            return None
 
 
     def get_token(self, board : Board) -> pygame.Surface:
