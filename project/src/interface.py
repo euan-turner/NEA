@@ -141,8 +141,6 @@ class Interface:
         ##Initial button setup
         self.turn_setup(board)
 
-        """Establish method as main thread"""
-        """Run ai as separate thread if needed"""
         """Set players"""
 
         ##Main loop for game window
@@ -378,12 +376,21 @@ class Interface:
             pygame.display.flip()
 
     def terminal_check(self, board : Board, game_surface : pygame.Surface):
+        """Check if the game is finished
+
+        Args:
+            board (Board): Current board instance
+            game_surface (pygame.Surface): Board surface
+
+        Returns:
+            'home' if game finished, None otherwise
+        """
         state = board.game_over()
         if state == Status.game_won:
             self.end_game_output(game_surface, 'Game Won', board)
             return 'home'
         elif state == Status.game_drawn:
-            self.end_game_outut(game_surface, 'Game Drawn', board)
+            self.end_game_output(game_surface, 'Game Drawn', board)
             return 'home'
         else:
             ##Terminate game loop
@@ -439,6 +446,12 @@ class Interface:
             button.update(self.window, self.base_theme)
 
     def set_players(self, player_one : Player_Type, player_two : Player_Type):
+        """Sets the players for a game
+
+        Args:
+            player_one (Player_Type): Type of player one
+            player_two (Player_Type): Type of player two
+        """
         self.players = [player_one, player_two]
 
 

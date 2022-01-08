@@ -34,7 +34,7 @@ class Minimax:
 
         valid_moves = self.board.retrieve_valid_moves()
         ordered_moves = self.naive_move_sort(valid_moves)
-        for move in valid_moves:
+        for move in ordered_moves:
             ##Generate and search game tree
             self.board.make_move(move)
             move_eval = self.minimax(0, -inf, inf, False)
