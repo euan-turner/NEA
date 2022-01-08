@@ -3,6 +3,7 @@ from button import Button
 from auxiliary import Player_Type, Status, Save_Type, ReturnThread
 from storage import save
 from ai import Minimax
+import tkinter as tk
 import pygame
 import os
 from time import sleep
@@ -22,7 +23,8 @@ class Interface:
     def __init__(self, base_theme):
         self.base_theme = base_theme
         self.active_buttons = []
-        self.players = [Player_Type.human, Player_Type.ai]
+        self.players = []
+        self.ai_strength = 0
 
     def create_window(self):
         """Creates the main window used by the application
@@ -141,8 +143,6 @@ class Interface:
         ##Initial button setup
         self.turn_setup(board)
 
-        """Set players"""
-
         ##Main loop for game window
         return_code = None
         ##While turns are continuing
@@ -152,7 +152,7 @@ class Interface:
                 return_code = self.game_loop(board, game_surface)
             ##AI turn
             else:
-                ai = Minimax(board.get_move_history(), 6)
+                ai = Minimax(board.get_move_history(), self.ai_strength)
                 move = ai.search()
                 self.play_move(move, board, game_surface)
                 return_code = self.terminal_check(board, game_surface)
@@ -315,6 +315,67 @@ class Interface:
             self.add_turn_buttons(board)
         pygame.display.flip()
 
+    def ai_player_setup(self):
+        """Runs the setup window for the ai and sets necessary attributes
+        """
+
+        def tk_output():
+            """Sets attributes with given values
+            """
+            player = radio_output.get()
+            strength = strength_output.get()
+            if player == 1:
+                self.set_players(Player_Type.ai, Player_Type.human)
+            else:
+                self.set_players(Player_Type.human, Player_Type.ai)
+            self.set_ai_strength(strength)
+            root.destroy() ##Terminate window
+
+        root = tk.Tk()
+        root.geometry("100x235")
+        root.title("Set AI")
+        ##Convert base theme tuple into hex string
+        col = '#' + ''.join([hex(i)[2:] for i in self.base_theme])
+        root.configure(background = col)
+
+        ##Player frame
+        player_frame = tk.Frame(root)
+        player_frame.grid(row = 0, column = 0, padx = 5, pady = 5)
+
+        tk.Label(player_frame, text = "AI Player", font = ("Arial", 16))\
+            .grid(row = 0, column = 0)
+
+        ##Radio frame
+        radio_frame = tk.Frame(player_frame)
+        radio_frame.grid(row = 1, column = 0, padx = 5, pady = 5)
+
+        radio_output = tk.IntVar(radio_frame, value = 1) ##default to first player
+        radio_pone = tk.Radiobutton(radio_frame, text = 'Player One', variable = radio_output, value = 1)
+        radio_ptwo = tk.Radiobutton(radio_frame, text = 'Player Two', variable = radio_output, value = 2)
+
+        radio_pone.grid(row = 0, column = 0)
+        radio_ptwo.grid(row = 1, column = 0)
+
+        radio_pone.select() ##default to first player
+
+        ##Strength frame
+        strength_frame = tk.Frame(root)
+        strength_frame.grid(row = 1, column = 0, padx = 5, pady = 5)
+
+        tk.Label(strength_frame, text = "AI Strength", font = ("Arial, 16"))\
+            .grid(row = 0, column = 0)
+        strength_output = tk.IntVar(strength_frame, value = 4) ##default to search depth of 4-ply
+        strength_scale = tk.Scale(strength_frame, variable = strength_output, from_ = 4, to = 20, orient = tk.HORIZONTAL, tickinterval = 16)
+        strength_scale.grid(row = 1, column = 0)
+
+        ##Submit frame
+        submit_frame = tk.Frame(root)
+        submit_frame.grid(row = 2, column = 0, padx = 5, pady = 5)
+
+        submit_button = tk.Button(submit_frame, text = 'Submit', command = tk_output)
+        submit_button.grid(row = 0, column = 0)
+
+        root.mainloop()
 
     def add_turn_buttons(self, board : Board):
         """Add valid turn buttons to window
@@ -449,10 +510,18 @@ class Interface:
         """Sets the players for a game
 
         Args:
-            player_one (Player_Type): Type of player one
-            player_two (Player_Type): Type of player two
+            player_one (Player_Type): Code for player one
+            player_two (Player_Type): Code for player twoe
         """
         self.players = [player_one, player_two]
+
+    def set_ai_strength(self, strength : int):
+        """Sets ai strength (search depth)
+
+        Args:
+            strength (int)
+        """
+        self.ai_strength = strength
 
 
 
